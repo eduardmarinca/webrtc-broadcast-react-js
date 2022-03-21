@@ -18,12 +18,9 @@ export default class WebRTCManager {
         }
     }
 
-    // Handles ICE candidate exchange
     async onCandidate({ candidate, from }) {
         this.peerConnections[from].addIceCandidate(new RTCIceCandidate(candidate))
     }
-
-    // Creates Peer connection and associates it with a socket
     createPeerConnection(socketId) {
         const pc = new RTCPeerConnection(this.config)
         pc.onicecandidate = event => {
@@ -35,7 +32,6 @@ export default class WebRTCManager {
         return pc
     }
 
-    // Creates a peer connection offer and emits it to connected clients
     onRequestOffer(socketId) {
         this.sendOffer(socketId)
     }
@@ -44,7 +40,7 @@ export default class WebRTCManager {
         const pc = this.createPeerConnection(socketId)
 
         const stream = this.localVideo.srcObject
-        stream.getTracks().forEach(track => pc.addTrack(track, stream))
+        stream?.getTracks().forEach(track => pc.addTrack(track, stream))
 
         const offer = await pc.createOffer()
         await pc.setLocalDescription(offer)
@@ -52,18 +48,15 @@ export default class WebRTCManager {
         this.socket.emit(`${this.prefix}webrtc-offer`, { offer: pc.localDescription, to: socketId })
     }
 
-    // Handles clients' answers to the offer that was previously sent
     async onAnswer({ answer, from }) {
         const pc = this.peerConnections[from]
         await pc.setRemoteDescription(new RTCSessionDescription(answer))
     }
 
-    // Disconnects peer connection
     onDisconnect({ from }) {
         this.closeConnection(from)
     }
 
-    // Closes a single peer connection
     closeConnection(socketId) {
         if (this.peerConnections[socketId]) {
             this.peerConnections[socketId].close()
@@ -73,14 +66,12 @@ export default class WebRTCManager {
         }
     }
 
-    // Closes all peer connections
     closeAllConnections() {
         Object.keys(this.peerConnections).forEach(socketId => {
             this.closeConnection(socketId)
         })
     }
 
-    // Handles incoming offer and serts up peer connection on the spectator side
     async onOffer({ offer, from }, mediaElement) {
         const pc = this.createPeerConnection(from)
         this.elements[from] = mediaElement

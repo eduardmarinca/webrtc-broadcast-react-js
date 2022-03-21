@@ -1,5 +1,5 @@
 {
-  "name": "socket-io-client",
+  "name": "webrtc-client",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
